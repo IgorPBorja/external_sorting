@@ -6,5 +6,6 @@ project(ExternalSorting)
 
 # add the library
 # will build a static library as libBalancedSort.a
-add_library(BalancedSort INTERFACE)
+add_library(BalancedSort INTERFACE
+        balanced_sort.tpp)
 target_include_directories(BalancedSort INTERFACE .)
