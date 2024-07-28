@@ -5,12 +5,12 @@
 #include <algorithm>
 #include "utils.hpp"
 
-using std::pair;
+using std::pair, std::min;
 
 template<typename T>
 vector<T> merge_single_runs(
 	vector<vector<T>> &runs,
-	uint mem_size
+	const uint mem_size
 ) {
 	// assert it can hold at least one element from each run
 	assert(mem_size >= runs.size());
@@ -43,7 +43,7 @@ vector<T> merge_single_runs(
 
 		// refill heap
 		if (ptrs[idx] < runs[idx].size()) {
-			min_heap.emplace(idx, runs[ptrs[idx]]);
+			min_heap.emplace(runs[idx][ptrs[idx]], idx);
 			++ptrs[idx];
 		}
 	}
@@ -61,14 +61,14 @@ template<typename T>
 void polyphasic_merge(
 	vector<vector<vector<T>>> &main_files,
 	vector<vector<T>> &anchor,
-	uint mem_size
+	const uint mem_size
 ){
 	assert(mem_size > 1);
 	// merge min(n_i) complete runs from each array
 	// where n_i is the number of runs in the i-th file
-	uint min_size = main_files[0].size();
+	std::size_t min_size = main_files[0].size();
 	for (uint i = 1; i < main_files.size(); i++) {
-		min_size = min(main_files[i].size(), min_size);
+		min_size = min(min_size, main_files[i].size());
 	}
 
 	// special heap of marked values
@@ -84,7 +84,7 @@ void polyphasic_merge(
 			runs_to_merge.emplace_back(main_files[j].back());
 			main_files[j].pop_back();
 		}
-		vector<T> new_merged_run = merge_single_runs(runs_to_merge);
+		vector<T> new_merged_run = merge_single_runs(runs_to_merge, mem_size);
 		anchor.emplace_back(new_merged_run);
 	}
 	// undo reverse
@@ -96,7 +96,7 @@ template<typename T>
 void perform_initial_distribution(
 	vector<T> data,
 	vector<vector<vector<T>>> &main_files,
-	uint mem_size
+	const uint mem_size
 ) {
 	assert(mem_size > 1);
 
@@ -157,7 +157,7 @@ void perform_initial_distribution(
 }
 
 template<typename T>
-vector<T> polyphasic_sort(vector<T> data, int num_files, int mem_size){
+vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_size){
 	vector<vector<vector<T>>> main_files(num_files - 1);
 	vector<vector<T>> anchor_file;
 
