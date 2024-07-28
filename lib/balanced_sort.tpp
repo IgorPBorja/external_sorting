@@ -73,8 +73,10 @@ void p_way_merge(
 		min_heap.pop();
 		current_run.push_back(T(min_key));
 	}
-	// register last run
-	right[file_idx].emplace_back(current_run);
+	if (!current_run.empty()) {
+		// register last run
+		right[file_idx].emplace_back(current_run);
+	}
 }
 
 template<typename T>

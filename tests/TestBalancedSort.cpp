@@ -30,20 +30,17 @@ void test_alternating_iterator() {
 }
 
 void test_initial_runs() {
-    const uint num_files = 2;
-    const uint mem_size = 3;
+    constexpr uint num_files = 2;
+    constexpr uint mem_size = 3;
     const vector<int> data = {7, 1, 5, 6, 3, 8, 2, 10, 4, 9, 1, 3, 7, 4, 1, 2, 3};
     vector<vector<vector<int>>> left(num_files), right(num_files);
     left[0].push_back(data);
-    for (AlternatingIterator<int> it(left); !it.ended(); ++it) {
-        std::cerr << it.value() << endl;
-    }
     const vector<vector<vector<int>>> expected = {
         {
-            {1, 5, 6, 7, 8}, {1, 3, 4, 7}
+            {1, 5, 6, 7, 8, 10}, {1, 3, 4, 7}
         },
         {
-            {2, 3, 4, 9, 10}
+            {2, 3, 4, 9}, {1, 2, 3}
         }
     };
     p_way_merge(left, right, mem_size);
@@ -53,8 +50,8 @@ void test_initial_runs() {
 }
 
 void test_balanced_sort(){
-    const uint num_files = 4;
-    const uint mem_size = 3;
+    constexpr uint num_files = 4;
+    constexpr uint mem_size = 3;
     const vector<int> data = {7, 1, 5, 6, 3, 8, 2, 10, 4, 9, 1, 3, 7, 4, 1, 2, 3};
     const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size);
     vector<int> expected_sorted_data = data;
