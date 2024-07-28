@@ -73,4 +73,54 @@ struct AlternatingIterator {
 	}
 };
 
+// struct to represent a value with (possibly) a mark that makes it "act"
+// like infinity in the underlying ordering of its type T
+template<typename T>
+struct MarkedValue{
+    T val;
+	bool marked;
+
+	MarkedValue(T val, bool marked = false): val(val), marked(marked){}
+
+	bool operator< (const MarkedValue<T>& other) const {
+		if (marked and !other.marked){
+			return false;
+		} else if (!marked and other.marked){
+		    return true;
+		} else {
+            return val < other.val;
+        }
+    }
+
+	bool operator== (const MarkedValue<T>& other) const {
+        return val == other.val and marked == other.marked;
+    }
+
+	bool operator> (const MarkedValue<T>& other) const {
+        return other < *this;
+    }
+
+	// type cast to base type T
+	operator T() const{
+        return val;
+    }
+
+	void mark(){
+        marked = true;
+    }
+};
+
+// O(N log N) unmarking of the entire heap
+template<typename T>
+void unmark_all(min_priority_queue<MarkedValue<T>> &min_heap) {
+	vector<T> values;
+	while (!min_heap.empty()) {
+		MarkedValue<T> min_key = min_heap.top();
+		min_heap.pop();
+        values.emplace_back(T(min_key));
+	}
+	for (const T key: values) {
+		min_heap.push(MarkedValue<T>(key));
+	}
+}
 #endif //UTILS_H

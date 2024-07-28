@@ -8,7 +8,7 @@
 #include <vector>
 
 template<typename T>
-std::vector<T> polyphasic_sort(const std::vector<T> data);
+std::vector<T> polyphasic_sort(std::vector<T> data, int num_files, int mem_size);
 
 // include template implementations
 #include "polyphasic_sort.hpp"
