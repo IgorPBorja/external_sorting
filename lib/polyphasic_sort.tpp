@@ -64,31 +64,38 @@ void polyphasic_merge(
 	const uint mem_size
 ){
 	assert(mem_size > 1);
-	// merge min(n_i) complete runs from each array
-	// where n_i is the number of runs in the i-th file
-	std::size_t min_size = main_files[0].size();
-	for (uint i = 1; i < main_files.size(); i++) {
-		min_size = min(min_size, main_files[i].size());
-	}
 
-	// special heap of marked values
-	min_priority_queue<MarkedValue<T>> min_heap;
-	vector<T> current_run;
-
-	// so deleting at the start becomes popping back
-	reverse(main_files.begin(), main_files.end());
-
-	for (uint i = 0; i < min_size; i++) {
-		vector<vector<T>> runs_to_merge;
-		for (uint j = 0; j < main_files.size(); j++) {
-			runs_to_merge.emplace_back(main_files[j].back());
-			main_files[j].pop_back();
+	// list of pairs (i, j)
+	// that means that run j of file i will be merged in this batch
+	vector<pair<uint, uint>> active_run_indices;
+	for (uint i = 0; i < main_files.size(); i++) {
+		if (main_files[i].size() > 0) {
+			active_run_indices.emplace_back(i, 0);
 		}
-		vector<T> new_merged_run = merge_single_runs(runs_to_merge, mem_size);
-		anchor.emplace_back(new_merged_run);
 	}
-	// undo reverse
-	reverse(main_files.begin(), main_files.end());
+
+	while (!active_run_indices.empty()){
+		vector<vector<T>> runs_to_merge;
+		vector<pair<uint, uint>> new_active_run_indices;
+		for (auto[i, j]: active_run_indices) {
+			runs_to_merge.emplace_back(main_files[i][j]);
+			if (j + 1 < main_files[i].size()) {
+				new_active_run_indices.emplace_back(i, j + 1);
+			}
+		}
+		if (runs_to_merge.size() > 1) {
+			vector<T> new_merged_run = merge_single_runs(runs_to_merge, mem_size);
+			anchor.emplace_back(new_merged_run);
+		} else {
+			anchor.emplace_back(runs_to_merge[0]);
+		}
+		active_run_indices = new_active_run_indices;
+	}
+
+	// clear all files now!
+	for (vector<vector<T>>& file: main_files) {
+		file.clear();
+	}
 }
 
 // do initial distribution of records
@@ -171,19 +178,37 @@ vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_siz
 		return remaining_runs;
 	};
 
+	// Procedure: merge (T[1],..., T[n-1]) completely into single tape T[n]
+	// if T[n] has a single run: stop
+	// swap T[1] and T[n] (it is just a reference swap, inexpensive)
+	// distribute 1/n-1 of the runs in T[1] to T[i] for all i=2...n-1
 	while (remaining_unmerged_runs() > 0 || anchor_file.size() != 1) {
 		polyphasic_merge(
 			main_files,
 			anchor_file,
 			mem_size
 		);
-		// find the first empty file post-merge
-		for (uint i = 0; i < main_files.size(); i++) {
-			if (main_files[i].size() == 0) {
-				swap(main_files[i], anchor_file);
-				break;
+		if (anchor_file.size() == 1) {
+			// single sorted run
+			return anchor_file[0];
+		}
+
+		swap(main_files[0], anchor_file);
+
+		// so that pop_back() becomes pop_front()
+		reverse(main_files[0].begin(), main_files[0].end());
+
+		// distribute runs from main_files[0]
+		const uint run_amount = main_files[0].size() / (num_files - 1);
+		for (uint i = 1; i < main_files.size(); i++) {
+			for (uint j = 0; j < run_amount; j++) {
+				main_files[i].emplace_back(main_files[0].back());
+				main_files[0].pop_back();
 			}
 		}
+
+		// unreverse
+		reverse(main_files[0].begin(), main_files[0].end());
 	}
 	return anchor_file[0];
 }
