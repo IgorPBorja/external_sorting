@@ -9,3 +9,9 @@ project(ExternalSorting)
 add_library(BalancedSort INTERFACE
         balanced_sort.tpp)
 target_include_directories(BalancedSort INTERFACE .)
+
+# add the library
+# will build a static library as libPolyphasicSort.a
+add_library(PolyphasicSort INTERFACE
+        polyphasic_sort.tpp)
+target_include_directories(PolyphasicSort INTERFACE .)
