@@ -11,6 +11,6 @@ template<typename T>
 std::vector<T> polyphasic_sort(std::vector<T> data, int num_files, int mem_size);
 
 // include template implementations
-#include "polyphasic_sort.hpp"
+#include "polyphasic_sort.tpp"
 
 #endif //POLYPHASIC_SORT_HPP
