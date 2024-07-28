@@ -6,6 +6,7 @@
 #define UTILS_H
 
 #include <vector>
+#include <queue>
 
 using std::vector;
 template<typename T>

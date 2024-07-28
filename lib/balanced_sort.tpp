@@ -1,12 +1,11 @@
 //
 // Created by igor-borja on 7/15/24.
 //
+#pragma once
+
 #include <vector>
 #include <algorithm>
-#include <queue>
 #include <utility>
-#include <memory>
-#include <exception>
 
 #include "utils.hpp"
 
