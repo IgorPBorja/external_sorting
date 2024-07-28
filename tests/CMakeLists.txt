@@ -14,6 +14,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+# Add test library / mock
+add_library(RandomFixtures STATIC RandomDataFixture.cpp)
+
 # Add tests
 add_executable(TestsBalancedSort TestBalancedSort.cpp)
 add_executable(TestsPolyphasicSort TestPolyphasicSort.cpp)
@@ -25,10 +28,12 @@ target_include_directories(TestsPolyphasicSort PUBLIC "${CMAKE_SOURCE_DIR}/lib")
 # Link against library lib and GoogleTest
 target_link_libraries(TestsBalancedSort
         PUBLIC BalancedSort
+        PUBLIC RandomFixtures
         GTest::gtest_main
 )
 target_link_libraries(TestsPolyphasicSort
         PUBLIC PolyphasicSort
+        PUBLIC RandomFixtures
         GTest::gtest_main
 )
 
