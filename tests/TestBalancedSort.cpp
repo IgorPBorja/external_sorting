@@ -61,7 +61,7 @@ TEST(test_balanced_sort, test_sort){
 }
 
 TEST(test_balanced_sort, parametrized_large_random_test_sort) {
-    // TAKING TOO LONG
+    // FIXME: TAKING TOO LONG
     GTEST_SKIP() << "Skipping this test since it takes 100% CPU usage and still does not finish" << endl;
     for (uint i = 0; i < 10; i++) {
         const uint num_files = 2 * RandomDataFixture::randint(2, 30);
