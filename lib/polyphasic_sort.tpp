@@ -166,7 +166,12 @@ void perform_initial_distribution(
 }
 
 template<typename T>
-vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_size){
+vector<T> polyphasic_sort(
+	vector<T> data,
+	const int num_files,
+	const int mem_size,
+	const bool verbose
+){
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
 	vector<vector<vector<T>>> main_files(num_files - 1);
@@ -176,7 +181,9 @@ vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_siz
 	uint anchor_idx = num_files;
 
 	perform_initial_distribution(data, main_files, mem_size);
-	watcher.register_step(main_files, main_idxs, mem_size);
+	if (verbose) {
+		watcher.register_step(main_files, main_idxs, mem_size);
+	}
 
 	auto remaining_runs = [&main_files]() {
 		uint runs = 0;
@@ -219,7 +226,9 @@ vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_siz
 		reverse(main_files[0].begin(), main_files[0].end());
 
 		// register
-		watcher.register_step(main_files, main_idxs, mem_size);
+		if (verbose) {
+			watcher.register_step(main_files, main_idxs, mem_size);
+		}
 	}
 	return main_files[0][0];
 }

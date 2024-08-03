@@ -81,7 +81,12 @@ void p_way_merge(
 }
 
 template<typename T>
-vector<T> balanced_sort(const vector<T> data, const int num_files, const int mem_size){
+vector<T> balanced_sort(
+	const vector<T> data,
+	const int num_files,
+	const int mem_size,
+	const bool verbose
+){
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
 
@@ -105,8 +110,10 @@ vector<T> balanced_sort(const vector<T> data, const int num_files, const int mem
 		std::swap(left, right);
 		std::swap(left_idxs, right_idxs);
 
-		// register step
-		watcher.register_step(left, left_idxs, mem_size);
+		if (verbose) {
+			// register step
+			watcher.register_step(left, left_idxs, mem_size);
+		}
 
 		// verify if left has a single run (the first)
 		single_run = left[0].size() == 1;

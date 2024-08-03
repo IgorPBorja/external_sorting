@@ -45,10 +45,10 @@ TEST(test_polyphasic_sort, parametrized_large_random_test_sort) {
     GTEST_SKIP() << "Skipping this test since it takes 100% CPU usage and still does not finish" << endl;
     for (uint i = 0; i < 10; i++) {
         const uint num_files = 2 * RandomDataFixture::randint(2, 30);
-        const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 40u));
-        const uint size = RandomDataFixture::randint(100, 200);
+        const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70u));
+        const uint size = RandomDataFixture::randint(5e3, 1e4);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e5, +1e5);
-        const vector<int> balanced_sorted_data = polyphasic_sort(data, num_files, mem_size);
+        const vector<int> balanced_sorted_data = polyphasic_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;
         sort(expected_sorted_data.begin(), expected_sorted_data.end());
 

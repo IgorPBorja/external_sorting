@@ -68,7 +68,7 @@ TEST(test_balanced_sort, parametrized_large_random_test_sort) {
         const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 40u));
         const uint size = RandomDataFixture::randint(100, 200);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e5, +1e5);
-        const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size);
+        const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;
         sort(expected_sorted_data.begin(), expected_sorted_data.end());
 
