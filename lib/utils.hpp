@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <queue>
+#include <string>
 
 using std::vector;
 template<typename T>
@@ -165,10 +166,14 @@ private:
 	template<typename T>
 	void print_distribution(const vector<vector<vector<T>>>& active_files, const vector<uint>& file_idxs) {
 		if (active_files.size() != file_idxs.size()) {
-			std::ostringstream error_oss;
-			error_oss << "There should be the same number of indices as files, got "
-				<< active_files.size() << " indices and " << file_idxs.size() << " files";
-			throw std::invalid_argument(error_oss.str());
+			const std::string error = (
+				std::string("There should be the same number of indices as files, got ")
+				+ std::to_string(active_files.size())
+				+ std::string(" indices and ")
+				+ std::to_string(file_idxs.size())
+				+ std::string(" files")
+			);
+			throw std::invalid_argument(error);
 		}
 		for (uint i = 0; i < active_files.size(); i++) {
 			if (active_files[i].empty()) {
