@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "RandomDataFixture.hpp"
 
-std::vector<int> RandomDataFixture::random_vector(size_t size, uint min_element, uint max_element) {
+std::vector<int> RandomDataFixture::random_vector(size_t size, int min_element, int max_element) {
     std::vector<int> gen(size);
     for (uint i = 0; i < size; i++) {
         const int val = rand() % (max_element - min_element + 1);
@@ -15,7 +15,7 @@ std::vector<int> RandomDataFixture::random_vector(size_t size, uint min_element,
     return gen;
 }
 
-int RandomDataFixture::randint(uint min_element, uint max_element) {
+int RandomDataFixture::randint(int min_element, int max_element) {
     return rand() % (max_element - min_element + 1) + min_element;
 }
 

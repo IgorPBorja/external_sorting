@@ -11,8 +11,8 @@
 
 // namespace for random-data fixtures
 namespace RandomDataFixture {
-    std::vector<int> random_vector(size_t size, uint min_element, uint max_element);
-    int randint(uint min_element, uint max_element);
+    std::vector<int> random_vector(size_t size, int min_element, int max_element);
+    int randint(int min_element, int max_element);
 }
 
 namespace Debugging {
