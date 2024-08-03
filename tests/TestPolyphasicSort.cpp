@@ -26,7 +26,7 @@ TEST(test_polyphasic_sort, test_initial_runs) {
         }
     };
     perform_initial_distribution(data, files, mem_size);
-    assert(files == expected);
+    ASSERT_EQ(files, expected);
 }
 
 TEST(test_polyphasic_sort, test_sort) {
@@ -37,7 +37,7 @@ TEST(test_polyphasic_sort, test_sort) {
     vector<int> sorted_data = data;
     sort(sorted_data.begin(), sorted_data.end());
 
-    assert(polyphasic_sorted_data == sorted_data);
+    ASSERT_EQ(polyphasic_sorted_data, sorted_data);
 }
 
 TEST(test_polyphasic_sort, parametrized_large_random_test_sort) {
@@ -77,6 +77,3 @@ TEST(test_balanced_sort, parametrized_small_random_test_sort) {
         );
     }
 }
-
-
-

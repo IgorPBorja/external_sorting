@@ -28,7 +28,7 @@ TEST(test_balanced_sort, test_alternating_iterator) {
     for (AlternatingIterator<int> it(data); !it.ended(); ++it) {
         result.push_back(it.value());
     }
-    assert(expected == result);
+    ASSERT_EQ(expected, result);
 }
 
 TEST(test_balanced_sort, test_initial_runs) {
@@ -46,7 +46,7 @@ TEST(test_balanced_sort, test_initial_runs) {
         }
     };
     p_way_merge(left, right, mem_size);
-    assert(right == expected);
+    ASSERT_EQ(right, expected);
 }
 
 TEST(test_balanced_sort, test_sort){
@@ -56,7 +56,7 @@ TEST(test_balanced_sort, test_sort){
     const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size);
     vector<int> expected_sorted_data = data;
     sort(expected_sorted_data.begin(), expected_sorted_data.end());
-    assert(balanced_sorted_data == expected_sorted_data);
+    ASSERT_EQ(balanced_sorted_data, expected_sorted_data);
     cout << "Passed 'test_balanced_sort'" << endl;
 }
 
@@ -99,6 +99,3 @@ TEST(test_balanced_sort, parametrized_small_random_test_sort) {
         );
     }
 }
-
-
-
