@@ -99,3 +99,7 @@ TEST(test_balanced_sort, parametrized_small_random_test_sort) {
         );
     }
 }
+
+int main() {
+    return RUN_ALL_TESTS();
+}
