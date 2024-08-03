@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <utility>
 
 #include "utils.hpp"
@@ -81,8 +82,15 @@ void p_way_merge(
 
 template<typename T>
 vector<T> balanced_sort(const vector<T> data, const int num_files, const int mem_size){
+	// TODO: allow other output streams?
+	Observer watcher(std::cout);
+
     const uint left_files = (num_files + 1) / 2, right_files = num_files / 2;
 	vector<vector<vector<T>>> left(left_files), right(right_files);
+	vector<uint> left_idxs(left_files), right_idxs(right_files);
+	std::iota(left_idxs.begin(), left_idxs.end(), 1);
+	std::iota(right_idxs.begin(), right_idxs.end(), left_files + 1);
+
 	left[0].push_back(vector<T>()); // first run
 	for (const T x: data){
 		left[0][0].emplace_back(x);
@@ -94,7 +102,12 @@ vector<T> balanced_sort(const vector<T> data, const int num_files, const int mem
 		// empty left
 		left.clear();
 		left.resize(left_files);
-		swap(left, right);
+		std::swap(left, right);
+		std::swap(left_idxs, right_idxs);
+
+		// register step
+		watcher.register_step(left, left_idxs, mem_size);
+
 		// verify if left has a single run (the first)
 		single_run = left[0].size() == 1;
         for (uint i = 1; i < left.size() && single_run; i++){

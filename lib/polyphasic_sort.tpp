@@ -3,6 +3,8 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <numeric>
+
 #include "utils.hpp"
 
 using std::pair, std::min;
@@ -165,40 +167,46 @@ void perform_initial_distribution(
 
 template<typename T>
 vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_size){
+	// TODO: allow other output streams?
+	Observer watcher(std::cout);
 	vector<vector<vector<T>>> main_files(num_files - 1);
+	vector<uint> main_idxs(num_files - 1);
+	std::iota(main_idxs.begin(), main_idxs.end(), 1);
 	vector<vector<T>> anchor_file;
+	uint anchor_idx = num_files;
 
 	perform_initial_distribution(data, main_files, mem_size);
+	watcher.register_step(main_files, main_idxs, mem_size);
 
-	auto remaining_unmerged_runs = [&main_files]() {
-		uint remaining_runs = 0;
+	auto remaining_runs = [&main_files]() {
+		uint runs = 0;
 		for (const auto& file: main_files) {
-			remaining_runs += file.size();
+			runs += file.size();
 		}
-		return remaining_runs;
+		return runs;
 	};
 
-	// Procedure: merge (T[1],..., T[n-1]) completely into single tape T[n]
-	// if T[n] has a single run: stop
+	// Procedure:
+	// If there is a single run, it will be in T[0] so return it and stop
+	// else: merge (T[1],..., T[n-1]) completely into single tape T[n]
 	// swap T[1] and T[n] (it is just a reference swap, inexpensive)
-	// distribute 1/n-1 of the runs in T[1] to T[i] for all i=2...n-1
-	while (remaining_unmerged_runs() > 0 || anchor_file.size() != 1) {
+	// distribute floor(1/(n-1)) of the runs in T[1] to T[i] for all i=2...n-1
+	while (remaining_runs() > 1) {
 		polyphasic_merge(
 			main_files,
 			anchor_file,
 			mem_size
 		);
-		if (anchor_file.size() == 1) {
-			// single sorted run
-			return anchor_file[0];
-		}
 
-		swap(main_files[0], anchor_file);
+		std::swap(main_files[0], anchor_file);
+		std::swap(main_idxs[0], anchor_idx);
 
 		// so that pop_back() becomes pop_front()
 		reverse(main_files[0].begin(), main_files[0].end());
 
 		// distribute runs from main_files[0]
+		// num_files is >= 3 so run_amount is == 0 when there is only a single run in main_files[0]
+		// (process finished)
 		const uint run_amount = main_files[0].size() / (num_files - 1);
 		for (uint i = 1; i < main_files.size(); i++) {
 			for (uint j = 0; j < run_amount; j++) {
@@ -209,6 +217,9 @@ vector<T> polyphasic_sort(vector<T> data, const int num_files, const int mem_siz
 
 		// unreverse
 		reverse(main_files[0].begin(), main_files[0].end());
+
+		// register
+		watcher.register_step(main_files, main_idxs, mem_size);
 	}
-	return anchor_file[0];
+	return main_files[0][0];
 }

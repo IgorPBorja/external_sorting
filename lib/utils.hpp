@@ -124,4 +124,69 @@ void unmark_all(min_priority_queue<MarkedValue<T>> &min_heap) {
 		min_heap.push(MarkedValue<T>(key));
 	}
 }
+
+struct Observer {
+	explicit Observer(std::ostream& os) : step(0), os(os) {}
+
+	template<typename T>
+	static double avg_run_size(const vector<vector<vector<T>>>& active_files, const uint mem_size) {
+		int total_elements = 0, total_runs = 0;
+		for (const vector<vector<T>>& file: active_files) {
+			total_runs += file.size();
+			for (const vector<T>& run: file) {
+				total_elements += run.size();
+			}
+		}
+		return static_cast<double>(total_elements) / static_cast<double>(total_runs * mem_size);
+	}
+
+	template<typename T>
+	void register_step(
+		const vector<vector<vector<T>>>& active_files,
+		const vector<uint>& file_idxs, const uint mem_size
+	) {
+		os << "fase " << step << " " << avg_run_size(active_files, mem_size) << std::endl;
+		print_distribution(active_files, file_idxs);
+
+		// increment step
+		++step;
+	}
+
+	void reset() {
+		step = 0;
+	}
+private:
+	int step;
+	std::ostream& os;
+
+	// Prints the runs distributed in the active files
+	// file_idxs: vector of indices of the active files
+	// active_files: vector of references to the active files (which are a vector<vector<T>> each)
+	template<typename T>
+	void print_distribution(const vector<vector<vector<T>>>& active_files, const vector<uint>& file_idxs) {
+		if (active_files.size() != file_idxs.size()) {
+			std::ostringstream error_oss;
+			error_oss << "There should be the same number of indices as files, got "
+				<< active_files.size() << " indices and " << file_idxs.size() << " files";
+			throw std::invalid_argument(error_oss.str());
+		}
+		for (uint i = 0; i < active_files.size(); i++) {
+			if (active_files[i].empty()) {
+				continue;
+			}
+			os << file_idxs[i] << ": ";
+			for (const vector<T>& run: active_files[i]) {
+				os << "{";
+				for (uint j = 0; j < run.size(); j++) {
+					os << run[j];
+					if (j + 1 < run.size()) {
+						os << " ";
+					}
+				}
+				os << "}";
+			}
+			os << std::endl;
+		}
+	}
+};
 #endif //UTILS_H
