@@ -8,7 +8,7 @@
 #include <vector>
 
 template<typename T>
-std::vector<T> balanced_sort(std::vector<T> data);
+std::vector<T> balanced_sort(const std::vector<T> data);
 
 // include template implementations
 #include "balanced_sort.tpp"
