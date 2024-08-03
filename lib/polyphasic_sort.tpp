@@ -215,8 +215,10 @@ vector<T> polyphasic_sort(
 		// num_files is >= 3 so run_amount is == 0 when there is only a single run in main_files[0]
 		// (process finished)
 		const uint run_amount = main_files[0].size() / (num_files - 1);
+		const uint remainder = main_files[0].size() % (num_files - 1);
 		for (uint i = 1; i < main_files.size(); i++) {
-			for (uint j = 0; j < run_amount; j++) {
+			const uint extra_run = (i < remainder) ? 1 : 0;
+			for (uint j = 0; j < run_amount + extra_run; j++) {
 				main_files[i].emplace_back(main_files[0].back());
 				main_files[0].pop_back();
 			}
