@@ -117,5 +117,8 @@ vector<T> balanced_sort(
 			watcher.register_step(left, left_idxs, mem_size);
 		}
 	}
+	if (verbose) {
+		watcher.print_avg_writes_except_initial();
+	}
 	return left[0][0];
 }

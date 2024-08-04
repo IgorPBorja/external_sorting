@@ -8,6 +8,8 @@
 #include <vector>
 #include <queue>
 #include <string>
+#include <iomanip>
+#include <cmath>
 
 using std::vector;
 template<typename T>
@@ -146,11 +148,19 @@ struct Observer {
 		const vector<vector<vector<T>>>& active_files,
 		const vector<int>& file_idxs, const int mem_size
 	) {
-		os << "fase " << step << " " << avg_run_size(active_files, mem_size) << std::endl;
+		// precision of two decimal digits (rounding, not truncating)
+		os << std::fixed << std::setprecision(2);
+		os << "fase " << step << " " << round(100.0 * avg_run_size(active_files, mem_size)) / 100.0 << std::endl;
 		print_distribution(active_files, file_idxs);
 
 		// increment step
 		++step;
+	}
+
+	void print_avg_writes_except_initial() const {
+		// precision of two decimal digits (rounding, not truncating)
+		os << std::fixed << std::setprecision(2);
+		os << "final " << round(100.0 * static_cast<double>(step - 1)) / 100.0 << std::endl;
 	}
 
 	void reset() {

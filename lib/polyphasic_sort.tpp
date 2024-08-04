@@ -168,5 +168,8 @@ vector<T> polyphasic_sort(
 			watcher.register_step(main_files, main_idxs, mem_size);
 		}
 	}
+	if (verbose) {
+		watcher.print_avg_writes_except_initial();
+	}
 	return main_files[0][0];
 }
