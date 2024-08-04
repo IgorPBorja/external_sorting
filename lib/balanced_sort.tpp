@@ -8,6 +8,7 @@
 #include <numeric>
 #include <utility>
 
+#include "initial_distribution.hpp"
 #include "utils.hpp"
 
 using std::vector, std::sort, std::min, std::pair;
@@ -18,106 +19,106 @@ using std::vector, std::sort, std::min, std::pair;
 template<typename T>
 void p_way_merge(
     const vector<vector<vector<T>>> &left,
-    vector<vector<vector<T>>> &right,
-    uint mem_size
+    vector<vector<vector<T>>> &right
 ){
-	assert(mem_size > 1);
+	// min heap of pair (value, file index)
+	min_priority_queue<pair<T, int>> min_heap;
+	vector<int> internal_run_ptr(left.size(), 0);  // ptr to next element in run for file i
+	int write_file_idx = 0;
+	int max_file_size = 0;
+	for (const auto& file: left) {
+		max_file_size = std::max(max_file_size, static_cast<int>(file.size()));
+	}
 
-	// special heap of marked values
-	min_priority_queue<MarkedValue<T>> min_heap;
-	vector<T> current_run;
-	uint file_idx = 0, marked_cnt = 0;
-	uint p = right.size();
-	uint i = 0;
-	AlternatingIterator<T> it(left);
+	for (int run_idx = 0; run_idx < max_file_size; run_idx++){
+		// min heap and run always start empty here
+		vector<T> current_run;
 
-	for (; !it.ended(); ++it, ++i){
-		if (i < mem_size){
-            min_heap.emplace(it.value());
-            continue;
+		fill(internal_run_ptr.begin(), internal_run_ptr.end(), 0);
+		int finished_runs = 0;
+
+		// add initial elements to heap
+		for (int i = 0; i < left.size(); i++) {
+			if (left[i].size() > run_idx) {
+				min_heap.emplace(left[i][run_idx][0], i);
+				// consumed this element
+				++internal_run_ptr[i];
+				if (internal_run_ptr[i] == left[i][run_idx].size()) {
+					++finished_runs;
+				}
+			} else {
+				++finished_runs;
+			}
+		}
+		while (finished_runs < left.size()) {
+			auto[value, i] = min_heap.top();
+			min_heap.pop();
+			current_run.emplace_back(value);
+			if (internal_run_ptr[i] < left[i][run_idx].size()) {
+				min_heap.emplace(left[i][run_idx][internal_run_ptr[i]], i);
+				++internal_run_ptr[i];
+				if (internal_run_ptr[i] == left[i][run_idx].size()) {
+					++finished_runs;
+				}
+			}
 		}
 
-        if (marked_cnt == mem_size) {
-            // that means all values are marked, so unmark and start a new run
-        	right[file_idx].emplace_back(current_run);
-        	current_run = vector<T>();
-            file_idx = (file_idx + 1) % p;
-            unmark_all(min_heap);
-        	marked_cnt = 0;
-        }
-		// make room for new data (removing 1 from heap)
-        MarkedValue<T> min_key = min_heap.top();
-        T curr_value = min_key.val;
-        current_run.push_back(curr_value);
-        min_heap.pop();
-		// push new data (1 entry)
-		if (it.value() < current_run.back()) {  // breaks order (smaller and cames after) -> push marked
-			min_heap.emplace(it.value(), true);
-			++marked_cnt;
-		} else {
-			min_heap.emplace(it.value(), false);
+		while (!min_heap.empty()) {
+			auto[value, _] = min_heap.top();
+			min_heap.pop();
+			current_run.emplace_back(value);
 		}
-	}
 
-	// unmark leftover data
-	// and reset current run (can't mix with marked data without breaking order)
-	if (marked_cnt > 0) {
-		right[file_idx].emplace_back(current_run);
-		current_run = vector<T>();
-		file_idx = (file_idx + 1) % p;
-		unmark_all(min_heap);
-		marked_cnt = 0;
-	}
-	// distribute leftover data
-	while (!min_heap.empty()) {
-		MarkedValue<T> min_key = min_heap.top();
-		min_heap.pop();
-		current_run.push_back(T(min_key));
-	}
-	if (!current_run.empty()) {
-		// register last run
-		right[file_idx].emplace_back(current_run);
+		right[write_file_idx].emplace_back(current_run);
+		write_file_idx = (write_file_idx + 1) % right.size();
 	}
 }
 
 template<typename T>
-vector<T> balanced_sort(const vector<T> data, const int num_files, const int mem_size){
+vector<T> balanced_sort(
+	const vector<T> data,
+	const int num_files,
+	const int mem_size,
+	const bool verbose
+){
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
 
-    const uint left_files = (num_files + 1) / 2, right_files = num_files / 2;
+    const int left_files = (num_files + 1) / 2, right_files = num_files / 2;
 	vector<vector<vector<T>>> left(left_files), right(right_files);
-	vector<uint> left_idxs(left_files), right_idxs(right_files);
+	vector<int> left_idxs(left_files), right_idxs(right_files);
 	std::iota(left_idxs.begin(), left_idxs.end(), 1);
 	std::iota(right_idxs.begin(), right_idxs.end(), left_files + 1);
 
-	left[0].push_back(vector<T>()); // first run
-	for (const T x: data){
-		left[0][0].emplace_back(x);
+	// perform initial distribution into left half
+	perform_initial_distribution(data, left, mem_size);
+	if (verbose) {
+		watcher.register_step(left, left_idxs, mem_size);
 	}
-	bool single_run;
-	do {
+	auto is_single_run = [](const vector<vector<vector<T>>>& left) {
+		// verify if left has a single run (the first)
+		bool single_run = left[0].size() == 1;
+        for (int i = 1; i < left.size(); i++){
+			single_run = single_run && (left[i].size() == 0);
+        }
+		return single_run;
+	};
+	while (!is_single_run(left)){
 		// initial runs is first iteration
-		p_way_merge(left, right, mem_size);
+		p_way_merge(left, right);
 		// empty left
 		left.clear();
 		left.resize(left_files);
 		std::swap(left, right);
 		std::swap(left_idxs, right_idxs);
 
-		// register step
-		watcher.register_step(left, left_idxs, mem_size);
-
-		// verify if left has a single run (the first)
-		single_run = left[0].size() == 1;
-        for (uint i = 1; i < left.size() && single_run; i++){
-			single_run = single_run && left[i].size() == 0;
-        }
-	} while (!single_run);
-
-	vector<T> sorted_data(data.size());
-	for (uint i = 0; i < data.size(); i++){
-        sorted_data[i] = left[0][0][i];
+		if (verbose) {
+			// register step
+			watcher.register_step(left, left_idxs, mem_size);
+		}
 	}
-	return sorted_data;
+	if (verbose) {
+		watcher.print_avg_writes_except_initial();
+	}
+	return left[0][0];
 }
