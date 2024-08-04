@@ -22,23 +22,23 @@ void p_way_merge(
     vector<vector<vector<T>>> &right
 ){
 	// min heap of pair (value, file index)
-	min_priority_queue<pair<T, uint>> min_heap;
-	vector<uint> internal_run_ptr(left.size(), 0);  // ptr to next element in run for file i
-	uint write_file_idx = 0;
-	uint max_file_size = 0;
+	min_priority_queue<pair<T, int>> min_heap;
+	vector<int> internal_run_ptr(left.size(), 0);  // ptr to next element in run for file i
+	int write_file_idx = 0;
+	int max_file_size = 0;
 	for (const auto& file: left) {
-		max_file_size = std::max(max_file_size, static_cast<uint>(file.size()));
+		max_file_size = std::max(max_file_size, static_cast<int>(file.size()));
 	}
 
-	for (uint run_idx = 0; run_idx < max_file_size; run_idx++){
+	for (int run_idx = 0; run_idx < max_file_size; run_idx++){
 		// min heap and run always start empty here
 		vector<T> current_run;
 
 		fill(internal_run_ptr.begin(), internal_run_ptr.end(), 0);
-		uint finished_runs = 0;
+		int finished_runs = 0;
 
 		// add initial elements to heap
-		for (uint i = 0; i < left.size(); i++) {
+		for (int i = 0; i < left.size(); i++) {
 			if (left[i].size() > run_idx) {
 				min_heap.emplace(left[i][run_idx][0], i);
 				// consumed this element
@@ -84,9 +84,9 @@ vector<T> balanced_sort(
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
 
-    const uint left_files = (num_files + 1) / 2, right_files = num_files / 2;
+    const int left_files = (num_files + 1) / 2, right_files = num_files / 2;
 	vector<vector<vector<T>>> left(left_files), right(right_files);
-	vector<uint> left_idxs(left_files), right_idxs(right_files);
+	vector<int> left_idxs(left_files), right_idxs(right_files);
 	std::iota(left_idxs.begin(), left_idxs.end(), 1);
 	std::iota(right_idxs.begin(), right_idxs.end(), left_files + 1);
 
@@ -98,7 +98,7 @@ vector<T> balanced_sort(
 	auto is_single_run = [](const vector<vector<vector<T>>>& left) {
 		// verify if left has a single run (the first)
 		bool single_run = left[0].size() == 1;
-        for (uint i = 1; i < left.size(); i++){
+        for (int i = 1; i < left.size(); i++){
 			single_run = single_run && (left[i].size() == 0);
         }
 		return single_run;

@@ -32,8 +32,8 @@ TEST(test_balanced_sort, test_alternating_iterator) {
 }
 
 TEST(test_balanced_sort, test_sort){
-    constexpr uint num_files = 4;
-    constexpr uint mem_size = 3;
+    constexpr int num_files = 4;
+    constexpr int mem_size = 3;
     const vector<int> data = {7, 1, 5, 6, 3, 8, 2, 10, 4, 9, 1, 3, 7, 4, 1, 2, 3};
     const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size);
     vector<int> expected_sorted_data = data;
@@ -43,10 +43,10 @@ TEST(test_balanced_sort, test_sort){
 }
 
 TEST(test_balanced_sort, parametrized_small_random_test_sort) {
-    for (uint i = 0; i < 10; i++) {
-        const uint num_files = 2 * RandomDataFixture::randint(2, 10);
-        const uint mem_size = RandomDataFixture::randint(num_files + 1, 2 * num_files + 1);
-        const uint size = RandomDataFixture::randint(1, 10);
+    for (int i = 0; i < 10; i++) {
+        const int num_files = 2 * RandomDataFixture::randint(2, 10);
+        const int mem_size = RandomDataFixture::randint(num_files + 1, 2 * num_files + 1);
+        const int size = RandomDataFixture::randint(1, 10);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e5, +1e5);
         const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size);
         vector<int> expected_sorted_data = data;
@@ -62,10 +62,10 @@ TEST(test_balanced_sort, parametrized_small_random_test_sort) {
 }
 
 TEST(test_balanced_sort, parametrized_large_random_test_sort) {
-    for (uint i = 0; i < 100; i++) {
-        const uint num_files = 2 * RandomDataFixture::randint(2, 30);
-        const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70u));
-        const uint size = RandomDataFixture::randint(1e4, 5e4);
+    for (int i = 0; i < 100; i++) {
+        const int num_files = 2 * RandomDataFixture::randint(2, 30);
+        const int mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70));
+        const int size = RandomDataFixture::randint(1e4, 5e4);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e5, +1e5);
         const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;
@@ -81,10 +81,10 @@ TEST(test_balanced_sort, parametrized_large_random_test_sort) {
 }
 
 TEST(test_balanced_sort, parametrized_huge_random_test_sort) {
-    for (uint i = 0; i < 10; i++) {
-        const uint num_files = 2 * RandomDataFixture::randint(2, 30);
-        const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70u));
-        const uint size = RandomDataFixture::randint(1e5, 3e5);
+    for (int i = 0; i < 10; i++) {
+        const int num_files = 2 * RandomDataFixture::randint(2, 30);
+        const int mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70));
+        const int size = RandomDataFixture::randint(1e5, 3e5);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e9, +1e9);
         const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;
@@ -100,10 +100,10 @@ TEST(test_balanced_sort, parametrized_huge_random_test_sort) {
 }
 
 TEST(test_balanced_sort, parametrized_mostly_equal_huge_random_test_sort) {
-    for (uint i = 0; i < 10; i++) {
-        const uint num_files = 2 * RandomDataFixture::randint(2, 30);
-        const uint mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70u));
-        const uint size = RandomDataFixture::randint(1e5, 3e5);
+    for (int i = 0; i < 10; i++) {
+        const int num_files = 2 * RandomDataFixture::randint(2, 30);
+        const int mem_size = RandomDataFixture::randint( num_files + 1, std::min(num_files * 2 + 1, 70));
+        const int size = RandomDataFixture::randint(1e5, 3e5);
         const vector<int> data = RandomDataFixture::random_vector(size, -100, +100);
         const vector<int> balanced_sorted_data = balanced_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;

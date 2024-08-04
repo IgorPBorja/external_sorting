@@ -12,7 +12,7 @@ template<typename T>
 void perform_initial_distribution(
 	std::vector<T> data,
 	std::vector<std::vector<std::vector<T>>> &main_files,
-	uint mem_size
+	int mem_size
 );
 
 // include template implementations

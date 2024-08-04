@@ -8,7 +8,7 @@
 
 std::vector<int> RandomDataFixture::random_vector(size_t size, int min_element, int max_element) {
     std::vector<int> gen(size);
-    for (uint i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         const int val = rand() % (max_element - min_element + 1);
         gen[i] = min_element + val;
     }

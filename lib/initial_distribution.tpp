@@ -12,17 +12,17 @@ template<typename T>
 void perform_initial_distribution(
 	vector<T> data,
 	vector<vector<vector<T>>> &main_files,
-	const uint mem_size
+	const int mem_size
 ) {
 	assert(mem_size > 1);
 
 	// special heap of marked values
 	min_priority_queue<MarkedValue<T>> min_heap;
 	vector<T> current_run;
-	uint file_idx = 0, marked_cnt = 0;
-	const uint p = main_files.size();
+	int file_idx = 0, marked_cnt = 0;
+	const int p = main_files.size();
 
-	for (uint i = 0; i < data.size(); i++){
+	for (int i = 0; i < data.size(); i++){
 		const T& x = data[i];
 		if (i < mem_size){
             min_heap.emplace(x);
