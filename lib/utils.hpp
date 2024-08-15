@@ -157,6 +157,21 @@ struct Observer {
 		++step;
 	}
 
+	// only for cascade sort
+	template<typename T>
+	void register_step(
+		const vector<vector<vector<T>>>& active_files,
+		const int mem_size
+	) {
+		// precision of two decimal digits (rounding, not truncating)
+		os << std::fixed << std::setprecision(2);
+		os << "fase " << step << " " << round(100.0 * avg_run_size(active_files, mem_size)) / 100.0 << std::endl;
+		print_distribution(active_files);
+
+		// increment step
+		++step;
+	}
+
 	void print_avg_writes_except_initial() const {
 		// precision of two decimal digits (rounding, not truncating)
 		os << std::fixed << std::setprecision(2);
@@ -190,6 +205,28 @@ private:
 				continue;
 			}
 			os << file_idxs[i] << ": ";
+			for (const vector<T>& run: active_files[i]) {
+				os << "{";
+				for (int j = 0; j < run.size(); j++) {
+					os << run[j];
+					if (j + 1 < run.size()) {
+						os << " ";
+					}
+				}
+				os << "}";
+			}
+			os << std::endl;
+		}
+	}
+
+	// NOTE: for cascade sort only
+	template<typename T>
+	void print_distribution(const vector<vector<vector<T>>>& active_files) {
+		for (int i = 0; i < active_files.size(); i++) {
+			if (active_files[i].empty()) {
+				continue;
+			}
+			os << i + 1 << ": ";
 			for (const vector<T>& run: active_files[i]) {
 				os << "{";
 				for (int j = 0; j < run.size(); j++) {
