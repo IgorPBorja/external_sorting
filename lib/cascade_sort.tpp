@@ -11,7 +11,7 @@
 
 using std::vector, std::pair, std::make_pair;
 
-constexpr int INF = std::numeric_limits<size_t>::max();
+constexpr size_t INF = 2e9;
 
 // merge a single run from each select file
 // returns number of writes
