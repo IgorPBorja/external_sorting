@@ -16,3 +16,9 @@ target_include_directories(BalancedSort INTERFACE .)
 add_library(PolyphasicSort INTERFACE
         polyphasic_sort.tpp initial_distribution.tpp utils.hpp)
 target_include_directories(PolyphasicSort INTERFACE .)
+
+# add the library
+# will build a static library as libCascadeSort.a
+add_library(CascadeSort INTERFACE
+        cascade_sort.tpp initial_distribution.tpp utils.hpp)
+target_include_directories(CascadeSort INTERFACE .)

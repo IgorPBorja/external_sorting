@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <numeric>
 #include <utility>
+#include <iostream>
 
 #include "initial_distribution.hpp"
 #include "utils.hpp"
