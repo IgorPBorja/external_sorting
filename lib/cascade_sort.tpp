@@ -122,23 +122,23 @@ int stuck_file(const vector<vector<T>> &files) {
     return idx;
 }
 
+// returns (sorted_vec, avg writes)
 template<typename T>
-vector<T> _cascade_sort_from_initial(
+pair<vector<T>, double> _cascade_sort_from_initial(
     vector<vector<vector<T>>>& files,
     const int mem_size,
-    const int initial_writes,
     const bool verbose
 ) {
-    int writes = initial_writes;
+    int writes = 0;
     int n = 0;
     for (const auto& file: files) {
         for (const auto& run: file) {
             n += run.size();
         }
     }
-
-    int num_files = files.size();
+    const int num_files = files.size();
     Observer watcher(std::cout);
+
     while (!is_finished(files)) {
         writes += merge_step(files, mem_size);
         if (verbose) {
@@ -165,14 +165,10 @@ vector<T> _cascade_sort_from_initial(
             writes += n;
         }
     }
-    // print final average
-    if (verbose) {
-        std::cout << "final " << double(writes) / double(n) << std::endl;
-    }
     // find last run
     for (int i = 0; i < num_files; ++i) {
         if (files[i].size() > 0) {
-            return files[i][0];
+            return {files[i][0], double(writes) / double(n)};
         }
     }
 }
@@ -184,20 +180,19 @@ vector<T> cascade_sort(
 ) {
     // initial runs
     vector<vector<vector<T>>> files(num_files - 1);
-    int writes = 0;
     Observer watcher(std::cout);
     perform_initial_distribution(data, files, mem_size);
-    for (int i = 0; i < num_files - 1; ++i) {
-        for (int j = 0; j < files[i].size(); ++j) {
-            writes += files[i][j].size();
-        }
-    }
-    watcher.register_step(files, mem_size);
     // add extra file for merging
     files.emplace_back();
+    watcher.register_step(files, mem_size);
 
-    return _cascade_sort_from_initial(
+    auto[sorted_data, avg_writes] = _cascade_sort_from_initial(
         files, mem_size, writes, verbose
     );
-}
 
+    // print final average
+    if (verbose) {
+        std::cout << "final " << std::fixed << std::setprecision(2) << avg_writes << std::endl;
+    }
+    return sorted_data;
+}

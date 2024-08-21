@@ -172,10 +172,8 @@ struct Observer {
 		++step;
 	}
 
-	void print_avg_writes_except_initial() const {
-		// precision of two decimal digits (rounding, not truncating)
-		os << std::fixed << std::setprecision(2);
-		os << "final " << round(100.0 * static_cast<double>(step - 1)) / 100.0 << std::endl;
+	double avg_writes() {
+		return round(100.0 * static_cast<double>(step - 1)) / 100.0;
 	}
 
 	void reset() {

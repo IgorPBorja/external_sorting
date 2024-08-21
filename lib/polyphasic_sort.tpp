@@ -103,24 +103,16 @@ void polyphasic_merge(
 }
 
 template<typename T>
-vector<T> polyphasic_sort(
-	vector<T> data,
-	const int num_files,
+pair<vector<T>, double> _polyphasic_sort_from_initial(
+	vector<vector<vector<T>>>& main_files,
+	vector<vector<T>>& anchor_file,
 	const int mem_size,
 	const bool verbose
 ){
-	// TODO: allow other output streams?
-	Observer watcher(std::cout);
-	vector<vector<vector<T>>> main_files(num_files - 1);
+	const int num_files = main_files.size() + 1;
+	int anchor_idx = num_files;
 	vector<int> main_idxs(num_files - 1);
 	std::iota(main_idxs.begin(), main_idxs.end(), 1);
-	vector<vector<T>> anchor_file;
-	int anchor_idx = num_files;
-
-	perform_initial_distribution(data, main_files, mem_size);
-	if (verbose) {
-		watcher.register_step(main_files, main_idxs, mem_size);
-	}
 
 	auto remaining_runs = [&main_files]() {
 		int runs = 0;
@@ -169,8 +161,33 @@ vector<T> polyphasic_sort(
 			watcher.register_step(main_files, main_idxs, mem_size);
 		}
 	}
+	return {main_files[0][0], watcher.avg_writes()};
+}
+
+vector<T> polyphasic_sort(
+	vector<T> data,
+	const int num_files,
+	const int mem_size,
+	const bool verbose
+){
+	// TODO: allow other output streams?
+	Observer watcher(std::cout);
+	vector<vector<vector<T>>> main_files(num_files - 1);
+	vector<int> main_idxs(num_files - 1);
+	std::iota(main_idxs.begin(), main_idxs.end(), 1);
+	vector<vector<T>> anchor_file;
+
+	perform_initial_distribution(data, main_files, mem_size);
 	if (verbose) {
-		watcher.print_avg_writes_except_initial();
+		watcher.register_step(main_files, main_idxs, mem_size);
 	}
-	return main_files[0][0];
+
+	auto[sorted_data, avg_writes] = _polyphasic_sort_from_initial(
+		main_files, anchor_file, mem_size, verbose
+	);
+
+	if (verbose){
+		std::cout << "final " << std::fixed << std::setprecision(2) << avg_writes << std::endl;
+	}
+	return sorted_data;
 }
