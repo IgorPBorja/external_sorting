@@ -84,6 +84,7 @@ pair<vector<T>, double> _balanced_sort_from_initial(
 ){
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
+	const int left_files = left.size(), right_files = right.size();
 	vector<int> left_idxs(left_files), right_idxs(right_files);
 	std::iota(left_idxs.begin(), left_idxs.end(), 1);
 	std::iota(right_idxs.begin(), right_idxs.end(), left_files + 1);

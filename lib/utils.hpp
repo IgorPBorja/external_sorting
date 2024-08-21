@@ -173,7 +173,7 @@ struct Observer {
 	}
 
 	double avg_writes() {
-		return round(100.0 * static_cast<double>(step - 1)) / 100.0;
+		return round(100.0 * static_cast<double>(step)) / 100.0;
 	}
 
 	void reset() {

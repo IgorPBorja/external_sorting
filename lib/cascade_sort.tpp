@@ -187,7 +187,7 @@ vector<T> cascade_sort(
     watcher.register_step(files, mem_size);
 
     auto[sorted_data, avg_writes] = _cascade_sort_from_initial(
-        files, mem_size, writes, verbose
+        files, mem_size, verbose
     );
 
     // print final average

@@ -109,6 +109,7 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 	const int mem_size,
 	const bool verbose
 ){
+	Observer watcher(std::cout);
 	const int num_files = main_files.size() + 1;
 	int anchor_idx = num_files;
 	vector<int> main_idxs(num_files - 1);
@@ -164,6 +165,7 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 	return {main_files[0][0], watcher.avg_writes()};
 }
 
+template<typename T>
 vector<T> polyphasic_sort(
 	vector<T> data,
 	const int num_files,
