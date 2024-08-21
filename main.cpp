@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "balanced_sort.hpp"
+#include "cascade_sort.hpp"
 #include "polyphasic_sort.hpp"
 
 using std::vector, std::string, std::cin;
@@ -27,5 +28,7 @@ int main(){
         balanced_sort(data, k, m);
     } else if (mode == "P") {
         polyphasic_sort(data, k, m);
+    } else if (mode == "C") {
+        cascade_sort(data, k, m);
     }
 }
