@@ -123,20 +123,22 @@ int stuck_file(const vector<vector<T>> &files) {
 }
 
 template<typename T>
-vector<T> cascade_sort(const vector<T> data, const int num_files, const int mem_size, const bool verbose) {
-    // initial runs
-    vector<vector<vector<T>>> files(num_files - 1);
-    Observer watcher(std::cout);
-    int writes = 0;
-    perform_initial_distribution(data, files, mem_size);
-    for (int i = 0; i < num_files - 1; ++i) {
-        for (int j = 0; j < files[i].size(); ++j) {
-            writes += files[i][j].size();
+vector<T> _cascade_sort_from_initial(
+    vector<vector<vector<T>>>& files,
+    const int mem_size,
+    const int initial_writes,
+    const bool verbose
+) {
+    int writes = initial_writes;
+    int n = 0;
+    for (const auto& file: files) {
+        for (const auto& run: file) {
+            n += run.size();
         }
     }
-    // add extra file for merging
-    files.emplace_back();
 
+    int num_files = files.size();
+    Observer watcher(std::cout);
     while (!is_finished(files)) {
         writes += merge_step(files, mem_size);
         if (verbose) {
@@ -160,12 +162,12 @@ vector<T> cascade_sort(const vector<T> data, const int num_files, const int mem_
                 ++j;
             }
             // all data was moved
-            writes += data.size();
+            writes += n;
         }
     }
     // print final average
     if (verbose) {
-        std::cout << "final " << double(writes) / double(data.size()) << std::endl;
+        std::cout << "final " << double(writes) / double(n) << std::endl;
     }
     // find last run
     for (int i = 0; i < num_files; ++i) {
@@ -174,3 +176,28 @@ vector<T> cascade_sort(const vector<T> data, const int num_files, const int mem_
         }
     }
 }
+
+template<typename T>
+vector<T> cascade_sort(
+    const vector<T> data, const int num_files,
+    const int mem_size, const bool verbose
+) {
+    // initial runs
+    vector<vector<vector<T>>> files(num_files - 1);
+    int writes = 0;
+    Observer watcher(std::cout);
+    perform_initial_distribution(data, files, mem_size);
+    for (int i = 0; i < num_files - 1; ++i) {
+        for (int j = 0; j < files[i].size(); ++j) {
+            writes += files[i][j].size();
+        }
+    }
+    watcher.register_step(files, mem_size);
+    // add extra file for merging
+    files.emplace_back();
+
+    return _cascade_sort_from_initial(
+        files, mem_size, writes, verbose
+    );
+}
+
