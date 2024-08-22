@@ -47,8 +47,7 @@ namespace RandomRuns {
     }
 }
 
-double exec_sorting_method(const string name, const int num_runs){
-    const int num_files = 10, mem_size = 10;
+double exec_sorting_method(const string name, const int num_runs, const int num_files, const int mem_size){
     if (name == "cascade"){
         vector<vector<vector<int>>> files = RandomRuns::unit_random_runs(num_runs, num_files - 1);
         files.emplace_back(); // empty file for merge
@@ -79,7 +78,7 @@ int main(){
     std::filesystem::create_directories("data");
     std::filesystem::create_directories("data/alpha");
     const string BASE_DIR = "data/alpha";
-    auto methods = { "balanced" }; //, "polyphasic", "cascade" };
+    auto methods = { "polyphasic" }; //, "polyphasic", "cascade" };
 
     // see docs for homework
     const int REPS = 10;
@@ -102,7 +101,7 @@ int main(){
                 double avg_alpha = 0.0;
                 for (auto m: m_values) {
                     for (int i = 0; i < REPS; i++){
-                        avg_alpha += exec_sorting_method(method, r) / double(REPS * m_values.size());
+                        avg_alpha += exec_sorting_method(method, r, k, m) / double(REPS * m_values.size());
                     }
                 }
                 std::cout << r << " : " << std::fixed << std::setprecision(4) << avg_alpha << std::endl;
