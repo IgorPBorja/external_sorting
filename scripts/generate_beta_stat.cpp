@@ -26,15 +26,19 @@ int main(int argc, char* argv[]){
 
     freopen(argv[1], "w", stdout);
 
-    std::vector<int> data[10];
-    for (int i = 0; i < 10; i++){
+    // see docs for homework
+    const int REPS = 10;
+    auto m_values = {3, 15, 30, 45, 60};
+
+    std::vector<int> data[REPS];
+    for (int i = 0; i < REPS; i++){
         data[i] = random_vector(N, -1e9, 1e9);
     }
 
-    for (int m = DELTA; m <= MAX_M; m += DELTA){
-        double beta[10];
+    for (const int m: m_values){
+        double beta[REPS];
         std::cout << m << ":" << std::endl;
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < REPS; i++){
             // only 1 file is fine
             std::vector<std::vector<std::vector<int>>> files(1);
             perform_initial_distribution(data[i], files, m);
