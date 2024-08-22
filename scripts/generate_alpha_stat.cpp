@@ -11,7 +11,6 @@
 
 using std::vector, std::string;
 
-
 namespace RandomRuns {
     vector<int> random_vector(size_t size, int min_element, int max_element) {
         vector<int> gen(size);
@@ -77,22 +76,37 @@ double exec_sorting_method(const string name, const int num_runs){
 }
 
 int main(){
+    std::filesystem::create_directories("data");
+    std::filesystem::create_directories("data/alpha");
     const string BASE_DIR = "data/alpha";
-    constexpr int REPS = 10;
-    constexpr int MIN_R = 10, MAX_R = 1000, DELTA = 10;
+    auto methods = { "balanced" }; //, "polyphasic", "cascade" };
 
-    std::filesystem::create_directories(BASE_DIR);
-    auto methods = { "polyphasic", "cascade", "balanced" };
+    // see docs for homework
+    const int REPS = 10;
+    auto k_values = {4, 6, 8, 10, 12};
+    auto m_values = {3, 15, 30, 45, 60};
+    vector<int> r_values;
+    for (int i = 1; i <= 10; i++) {
+        for (int j = 10; j <= 1000; j += 10) {
+            if (i * j <= 5000) r_values.emplace_back(i * j);
+        }
+    }
+    std::sort( r_values.begin(), r_values.end() );
+    r_values.erase( std::unique( r_values.begin(), r_values.end() ), r_values.end() );
 
     for (const string& method: methods){
-        string filepath = BASE_DIR + method + ".txt";
-        freopen(filepath.c_str(), "w", stdout);
-        for (int i = MIN_R; i <= MAX_R; i += DELTA){
-            double avg_alpha = 0.0;
-            for (int j = 0; j < REPS; j++){
-                avg_alpha += exec_sorting_method(method, i) / double(REPS);
+        for (const int k: k_values) {
+            string filepath = BASE_DIR + "/" + method + "-" + std::to_string(k) + "-files.txt";
+            freopen(filepath.c_str(), "w", stdout);
+            for (const auto r: r_values){
+                double avg_alpha = 0.0;
+                for (auto m: m_values) {
+                    for (int i = 0; i < REPS; i++){
+                        avg_alpha += exec_sorting_method(method, r) / double(REPS * m_values.size());
+                    }
+                }
+                std::cout << r << " : " << std::fixed << std::setprecision(4) << avg_alpha << std::endl;
             }
-            std::cout << i << " : " << std::fixed << std::setprecision(4) << avg_alpha << std::endl;
         }
     }
 }
