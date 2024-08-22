@@ -16,15 +16,16 @@ using std::vector, std::sort, std::min, std::pair;
 
 // creates the initial runs and distribute them into the `num_files` files
 // in a alternating manner
-// returns a vector of `num_files` elements of type vector<vector<T>> (vectors of runs)
+// returns the number of writes to file
 template<typename T>
-void p_way_merge(
+int p_way_merge(
     const vector<vector<vector<T>>> &left,
     vector<vector<vector<T>>> &right
 ){
 	// min heap of pair (value, file index)
 	min_priority_queue<pair<T, int>> min_heap;
 	vector<int> internal_run_ptr(left.size(), 0);  // ptr to next element in run for file i
+	int writes = 0;  // writes to file/disk
 	int write_file_idx = 0;
 	int max_file_size = 0;
 	for (const auto& file: left) {
@@ -55,6 +56,7 @@ void p_way_merge(
 			auto[value, i] = min_heap.top();
 			min_heap.pop();
 			current_run.emplace_back(value);
+			++writes;
 			if (internal_run_ptr[i] < left[i][run_idx].size()) {
 				min_heap.emplace(left[i][run_idx][internal_run_ptr[i]], i);
 				++internal_run_ptr[i];
@@ -68,11 +70,13 @@ void p_way_merge(
 			auto[value, _] = min_heap.top();
 			min_heap.pop();
 			current_run.emplace_back(value);
+			++writes;
 		}
 
 		right[write_file_idx].emplace_back(current_run);
 		write_file_idx = (write_file_idx + 1) % right.size();
 	}
+	return writes;
 }
 
 template<typename T>
@@ -89,6 +93,13 @@ pair<vector<T>, double> _balanced_sort_from_initial(
 	std::iota(left_idxs.begin(), left_idxs.end(), 1);
 	std::iota(right_idxs.begin(), right_idxs.end(), left_files + 1);
 
+	int n = 0;
+	for (const auto& file: left) {
+		for (const auto& run: file) {
+			n += run.size();
+		}
+	}
+	int writes = 0;
 
 	auto is_single_run = [](const vector<vector<vector<T>>>& left) {
 		// verify if left has a single run (the first)
@@ -100,7 +111,7 @@ pair<vector<T>, double> _balanced_sort_from_initial(
 	};
 	while (!is_single_run(left)){
 		// initial runs is first iteration
-		p_way_merge(left, right);
+		writes += p_way_merge(left, right);
 		// empty left
 		left.clear();
 		left.resize(left_files);
@@ -112,7 +123,7 @@ pair<vector<T>, double> _balanced_sort_from_initial(
 			watcher.register_step(left, left_idxs, mem_size);
 		}
 	}
-	return {left[0][0], watcher.avg_writes()};
+	return {left[0][0], double(writes) / double(n)};
 }
 
 template<typename T>

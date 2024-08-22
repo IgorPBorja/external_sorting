@@ -61,13 +61,15 @@ vector<T> merge_single_runs(
 	return result;
 }
 
+// returns number of writes
 template<typename T>
-void polyphasic_merge(
+int polyphasic_merge(
 	vector<vector<vector<T>>> &main_files,
 	vector<vector<T>> &anchor,
 	const int mem_size
 ){
 	assert(mem_size > 1);
+	int writes = 0;
 
 	// list of pairs (i, j)
 	// that means that run j of file i will be merged in this batch
@@ -89,8 +91,10 @@ void polyphasic_merge(
 		}
 		if (runs_to_merge.size() > 1) {
 			vector<T> new_merged_run = merge_single_runs(runs_to_merge, mem_size);
+			writes += new_merged_run.size();
 			anchor.emplace_back(new_merged_run);
 		} else {
+			writes += runs_to_merge[0].size();
 			anchor.emplace_back(runs_to_merge[0]);
 		}
 		active_run_indices = new_active_run_indices;
@@ -100,6 +104,7 @@ void polyphasic_merge(
 	for (vector<vector<T>>& file: main_files) {
 		file.clear();
 	}
+	return writes;
 }
 
 template<typename T>
@@ -115,6 +120,12 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 	vector<int> main_idxs(num_files - 1);
 	std::iota(main_idxs.begin(), main_idxs.end(), 1);
 
+	int n = 0;
+	for (const auto& file: main_files) {
+		for (const auto& run: file) n += run.size();
+	}
+	int writes = 0;
+
 	auto remaining_runs = [&main_files]() {
 		int runs = 0;
 		for (const auto& file: main_files) {
@@ -129,7 +140,7 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 	// swap T[1] and T[n] (it is just a reference swap, inexpensive)
 	// distribute floor(1/(n-1)) of the runs in T[1] to T[i] for all i=2...n-1
 	while (remaining_runs() > 1) {
-		polyphasic_merge(
+		writes += polyphasic_merge(
 			main_files,
 			anchor_file,
 			mem_size
@@ -144,13 +155,14 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 		// distribute runs from main_files[0]
 		// num_files is >= 3 so run_amount is == 0 when there is only a single run in main_files[0]
 		// (process finished)
-		const int run_amount = main_files[0].size() / (num_files - 1);
-		const int remainder = main_files[0].size() % (num_files - 1);
+		const int run_amount = main_files[0].size() / (num_files);
+		const int remainder = main_files[0].size() % (num_files);
 		for (int i = 1; i < main_files.size(); i++) {
 			const int extra_run = (i < remainder) ? 1 : 0;
 			for (int j = 0; j < run_amount + extra_run; j++) {
 				main_files[i].emplace_back(main_files[0].back());
 				main_files[0].pop_back();
+				++writes;
 			}
 		}
 
@@ -162,7 +174,7 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 			watcher.register_step(main_files, main_idxs, mem_size);
 		}
 	}
-	return {main_files[0][0], watcher.avg_writes()};
+	return {main_files[0][0], double(writes) / double(n)};
 }
 
 template<typename T>
