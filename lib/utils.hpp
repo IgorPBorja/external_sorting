@@ -10,6 +10,7 @@
 #include <string>
 #include <iomanip>
 #include <cmath>
+#include <cassert>
 
 using std::vector;
 template<typename T>
@@ -235,4 +236,56 @@ private:
 		}
 	}
 };
+
+// returns number of writes
+template<typename T>
+int redistribute_if_needed(
+	vector<vector<vector<T>>>& files
+) {
+	auto remaining_runs = [&files]() {
+		int runs = 0;
+		for (const auto& file: files) {
+			runs += file.size();
+		}
+		return runs;
+	};
+
+	// find first file with many runs
+	int idx = -1;
+	for (int i = 0; i < files.size(); i++) {
+		if (files[i].size() > 1) {
+			idx = i;
+			break;
+		}
+	}
+
+	const int num_files = files.size();
+	int writes = 0;
+	// only main_files[idx] is occupied and with > 1 runs
+	// Solution: distribute runs from main_files[idx]
+	// num_files is >= 3 so run_amount is == 0 when there is only a single run in main_files[0]
+	// (process finished)
+	if (idx != -1 && remaining_runs() == files[idx].size()) {
+		// so that pop_back() becomes pop_front()
+		// NOTE: does not need to reverse again later, will become empty
+		std::reverse(files[idx].begin(), files[idx].end());
+		const int run_amount = files[idx].size() / (num_files - 1);
+		const int remainder = files[idx].size() % (num_files - 1);
+		int j = 0;
+		for (int i = 0; i < files.size(); i++) {
+			if (i == idx) continue;
+			const int extra_run = (j < remainder) ? 1 : 0;
+			for (int k = 0; k < run_amount + extra_run; k++) {
+				writes += files[idx].back().size();
+				files[i].emplace_back(files[idx].back());
+				files[idx].pop_back();
+			}
+			++j;
+		}
+	}
+	// if did redistribute, then did it fully
+	assert((writes == 0 || files[idx].size() == 0));
+	return writes;
+}
+
 #endif //UTILS_H

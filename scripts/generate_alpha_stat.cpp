@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 #include "cascade_sort.hpp"
@@ -57,9 +58,9 @@ double exec_sorting_method(const string name, const int num_runs, const int num_
         return avg_writes;
     } else if (name == "polyphasic"){
         vector<vector<vector<int>>> files = RandomRuns::unit_random_runs(num_runs, num_files - 1);
-        vector<vector<int>> anchor_file;
+        files.emplace_back(); // empty file for merge
         auto[sorted_data, avg_writes] = _polyphasic_sort_from_initial(
-            files, anchor_file, mem_size, false
+            files, mem_size, false
         );
         return avg_writes;
     } else if (name == "balanced"){
@@ -74,29 +75,34 @@ double exec_sorting_method(const string name, const int num_runs, const int num_
     }
 }
 
-int main(){
+int main(int argc, char** argv){
+    int seed = std::stoi(argv[1]);
+    srand(seed);
+
     std::filesystem::create_directories("data");
     std::filesystem::create_directories("data/alpha");
     const string BASE_DIR = "data/alpha";
-    auto methods = { "polyphasic" }; //, "polyphasic", "cascade" };
+    auto methods = { "polyphasic" };
 
     // see docs for homework
     const int REPS = 10;
     auto k_values = {4, 6, 8, 10, 12};
     auto m_values = {3, 15, 30, 45, 60};
     vector<int> r_values;
-    for (int i = 1; i <= 10; i++) {
-        for (int j = 10; j <= 1000; j += 10) {
-            if (i * j <= 5000) r_values.emplace_back(i * j);
-        }
+    for (int j = 10; j <= 1000; j += 10) {
+        r_values.emplace_back(j);
     }
     std::sort( r_values.begin(), r_values.end() );
     r_values.erase( std::unique( r_values.begin(), r_values.end() ), r_values.end() );
 
+    // flush always after each operation
+    std::cout.setf(std::ios::unitbuf);
+
     for (const string& method: methods){
         for (const int k: k_values) {
             string filepath = BASE_DIR + "/" + method + "-" + std::to_string(k) + "-files.txt";
-            freopen(filepath.c_str(), "w", stdout);
+            std::cout << "generating file " << filepath << std::endl;
+            std::ofstream outfile (filepath);
             for (const auto r: r_values){
                 double avg_alpha = 0.0;
                 for (auto m: m_values) {
@@ -105,7 +111,9 @@ int main(){
                     }
                 }
                 std::cout << r << " : " << std::fixed << std::setprecision(4) << avg_alpha << std::endl;
+                outfile << r << " : " << std::fixed << std::setprecision(4) << avg_alpha << std::endl;
             }
+            outfile.close();
         }
     }
 }

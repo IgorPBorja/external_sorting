@@ -2,16 +2,36 @@ import re
 import glob
 import os
 import matplotlib.pyplot as plt
+import argparse
 
 from pathlib import Path
 
 def path_pattern(method: str):
     input_p = str(Path(__file__).parents[1] / "data" / "alpha" / (method + "*"))
-    output_p = str(Path(__file__).parents[1] / "data" / f"{method}.pdf")
+    output_p = str(Path(__file__).parents[1] / "data" / f"{method}.png")
     return input_p, output_p
 
-# METHODS = ["polyphasic", "balanced", "cascade"]
-METHODS = ["balanced"]
+def parse_methods():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--all", action="store_true", help="Plot all graphs")
+    parser.add_argument("--balanced", action="store_true", help="Plot graph for p-way balanced sort")
+    parser.add_argument("--polyphasic", action="store_true", help="Plot graph for polyphasic sort")
+    parser.add_argument("--cascade", action="store_true", help="Plot graph for cascade sort")
+    args = parser.parse_args()
+    methods = []
+    if args.all:
+        return ["balanced", "polyphasic", "cascade"]
+    elif args.balanced:
+        methods.append("balanced")
+    elif args.polyphasic:
+        methods.append("polyphasic")
+    elif args.cascade:
+        methods.append("cascade")
+    print(f"Running methods: ", ", ".join(methods) if methods else None)
+    return methods
+
+METHODS = parse_methods()
+
 NAMES = {
     "polyphasic": "Ordenação polifásica",
     "balanced": "Ordenação balanceada por p caminhos",
