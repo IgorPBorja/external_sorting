@@ -129,6 +129,7 @@ void unmark_all(min_priority_queue<MarkedValue<T>> &min_heap) {
 }
 
 struct Observer {
+	int step;
 	explicit Observer(std::ostream& os) : step(0), os(os) {}
 
 	template<typename T>
@@ -176,7 +177,6 @@ struct Observer {
 		step = 0;
 	}
 private:
-	int step;
 	std::ostream& os;
 
 	// Prints the runs distributed in the active files

@@ -11,8 +11,6 @@
 
 using std::vector, std::pair, std::make_pair;
 
-constexpr size_t INF = 2e9;
-
 // merge a single run from each select file
 // returns number of writes
 template<typename T>
@@ -60,6 +58,8 @@ int merge_step(
     vector<vector<vector<T>>>& files,
     const int mem_size
 ) {
+    constexpr int INF = std::numeric_limits<int>::max();
+
     vector<int> merge_ids;
     int output_id = -1;
     size_t min_merge_steps = INF;
