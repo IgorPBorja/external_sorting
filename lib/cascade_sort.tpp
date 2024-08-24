@@ -11,8 +11,6 @@
 
 using std::vector, std::pair, std::make_pair;
 
-constexpr size_t INF = 2e9;
-
 // merge a single run from each select file
 // returns number of writes
 template<typename T>
@@ -60,6 +58,8 @@ int merge_step(
     vector<vector<vector<T>>>& files,
     const int mem_size
 ) {
+    constexpr int INF = std::numeric_limits<int>::max();
+
     vector<int> merge_ids;
     int output_id = -1;
     size_t min_merge_steps = INF;
@@ -122,20 +122,22 @@ int stuck_file(const vector<vector<T>> &files) {
     return idx;
 }
 
+// returns (sorted_vec, avg writes)
 template<typename T>
-vector<T> cascade_sort(const vector<T> data, const int num_files, const int mem_size, const bool verbose) {
-    // initial runs
-    vector<vector<vector<T>>> files(num_files - 1);
-    Observer watcher(std::cout);
+pair<vector<T>, double> _cascade_sort_from_initial(
+    vector<vector<vector<T>>>& files,
+    const int mem_size,
+    const bool verbose
+) {
     int writes = 0;
-    perform_initial_distribution(data, files, mem_size);
-    for (int i = 0; i < num_files - 1; ++i) {
-        for (int j = 0; j < files[i].size(); ++j) {
-            writes += files[i][j].size();
+    int n = 0;
+    for (const auto& file: files) {
+        for (const auto& run: file) {
+            n += run.size();
         }
     }
-    // add extra file for merging
-    files.emplace_back();
+    const int num_files = files.size();
+    Observer watcher(std::cout);
 
     while (!is_finished(files)) {
         writes += merge_step(files, mem_size);
@@ -160,17 +162,37 @@ vector<T> cascade_sort(const vector<T> data, const int num_files, const int mem_
                 ++j;
             }
             // all data was moved
-            writes += data.size();
+            writes += n;
         }
-    }
-    // print final average
-    if (verbose) {
-        std::cout << "final " << double(writes) / double(data.size()) << std::endl;
     }
     // find last run
     for (int i = 0; i < num_files; ++i) {
         if (files[i].size() > 0) {
-            return files[i][0];
+            return {files[i][0], double(writes) / double(n)};
         }
     }
+}
+
+template<typename T>
+vector<T> cascade_sort(
+    const vector<T> data, const int num_files,
+    const int mem_size, const bool verbose
+) {
+    // initial runs
+    vector<vector<vector<T>>> files(num_files - 1);
+    Observer watcher(std::cout);
+    perform_initial_distribution(data, files, mem_size);
+    // add extra file for merging
+    files.emplace_back();
+    watcher.register_step(files, mem_size);
+
+    auto[sorted_data, avg_writes] = _cascade_sort_from_initial(
+        files, mem_size, verbose
+    );
+
+    // print final average
+    if (verbose) {
+        std::cout << "final " << std::fixed << std::setprecision(2) << avg_writes << std::endl;
+    }
+    return sorted_data;
 }

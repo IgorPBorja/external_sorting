@@ -32,19 +32,20 @@ for i in range(0, len(lines), 2):
 plt.figure(figsize=(10, 6))
 
 # Scatter plot for m vs average(a)
-plt.scatter(m_values, averages, color='blue', label='Average over 10 different data arrays')
+plt.plot(m_values, averages, color='blue', label=f'Média sobre 10 arquivos diferentes')
 
 # Box plot for standard deviation
-plt.errorbar(m_values, averages, yerr=std_devs, fmt='o', color='red', label='Standard deviation (as error bars)')
+plt.errorbar(m_values, averages, yerr=std_devs, fmt='o', color='red', label='Desvio padrão (no formato de error bars)')
 
 # Adding labels and title
-plt.xlabel(r'Memory size $m$')
-plt.ylabel(r'Metric $\beta(m, 0)$')
+plt.xlabel(r'Tamanho de memória $m$')
+plt.ylabel(r'Métrica $\beta(m, 0)$')
 # FIXME is it better with this scale that starts at 0, or the natural scale that starts close to 1.9x?
-plt.ylim(0, 5.0)
-plt.xticks([5 * k for k in range(1, 20 + 1)])
-plt.title(r'Plot of relative (to memory size) average run length $\beta(m, 0)$ from the initial distribution of runs')
+plt.xticks(m_values)
+plt.ylim(1.9, 2.1)
+plt.title(r'Plot de tamanho médio relativo (ao tamanho de memória) das runs $\beta(m, 0)$'
+          + '\n a partir da distribuição inicial (seleção natural)')
 plt.legend()
 
 # Display the plot
-plt.show()
+plt.savefig("data/beta.pdf")

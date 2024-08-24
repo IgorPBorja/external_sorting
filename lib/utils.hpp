@@ -129,6 +129,7 @@ void unmark_all(min_priority_queue<MarkedValue<T>> &min_heap) {
 }
 
 struct Observer {
+	int step;
 	explicit Observer(std::ostream& os) : step(0), os(os) {}
 
 	template<typename T>
@@ -172,17 +173,10 @@ struct Observer {
 		++step;
 	}
 
-	void print_avg_writes_except_initial() const {
-		// precision of two decimal digits (rounding, not truncating)
-		os << std::fixed << std::setprecision(2);
-		os << "final " << round(100.0 * static_cast<double>(step - 1)) / 100.0 << std::endl;
-	}
-
 	void reset() {
 		step = 0;
 	}
 private:
-	int step;
 	std::ostream& os;
 
 	// Prints the runs distributed in the active files
