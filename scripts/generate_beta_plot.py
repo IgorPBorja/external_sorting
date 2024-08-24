@@ -48,4 +48,4 @@ plt.title(r'Plot de tamanho médio relativo (ao tamanho de memória) das runs $\
 plt.legend()
 
 # Display the plot
-plt.savefig("data/beta.pdf")
+plt.savefig("data/beta.png")

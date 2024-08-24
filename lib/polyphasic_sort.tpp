@@ -7,135 +7,23 @@
 #include <iostream>
 
 #include "initial_distribution.hpp"
+#include "cascade_sort.hpp"
 #include "utils.hpp"
 
 using std::pair, std::min;
 
 template<typename T>
-vector<T> merge_single_runs(
-	vector<vector<T>> &runs,
-	const int mem_size
-) {
-	vector<T> result;
-	vector<int> ptrs(runs.size(), 0);
-
-	min_priority_queue<pair<T, int>> min_heap;
-
-	// fill heap
-	int completed_runs = 0, i = 0;
-	for (const auto &run : runs) {
-		if (run.empty()) ++completed_runs;
-	}
-	while (completed_runs < runs.size() && min_heap.size() < mem_size) {
-		if (ptrs[i] < runs[i].size()) {
-			min_heap.emplace(runs[i][ptrs[i]], i);
-			++ptrs[i];
-			if (ptrs[i] == runs[i].size()) {
-				++completed_runs;
-			}
-		}
-		i = (i + 1) % runs.size();
-	}
-
-	// strategy: take from runs not totally consumed (in order)
-	while (!min_heap.empty()) {
-		// remove one element
-		auto[value, idx] = min_heap.top();
-		min_heap.pop();
-		// add to merge
-		result.emplace_back(value);
-
-		// refill heap: seek for incomplete file (not fully processed)
-		int next_run_idx = -1;
-		for (int i = 0; i < runs.size(); i++) {
-			if (ptrs[i] < runs[i].size()) {
-				next_run_idx = i;
-				break;
-			}
-		}
-		if (next_run_idx != -1) {
-			min_heap.emplace(runs[next_run_idx][ptrs[next_run_idx]], idx);
-			++ptrs[next_run_idx];
-		} else {
-			break;
-		}
-	}
-
-	// just remove from the min_heap and continue
-	while (!min_heap.empty()) {
-		auto[value, _] = min_heap.top();
-		min_heap.pop();
-		result.emplace_back(value);
-	}
-	return result;
-}
-
-// returns number of writes
-template<typename T>
-int polyphasic_merge(
-	vector<vector<vector<T>>> &main_files,
-	vector<vector<T>> &anchor,
-	const int mem_size
-){
-	assert(mem_size > 1);
-	assert(!main_files.empty());
-	constexpr int INF = std::numeric_limits<int>::max();
-
-	int writes = 0;
-
-	// list of pairs (i, j)
-	// that means that run j of file i will be merged in this batch
-	vector<int> active_run_indices;
-	int num_steps = INF;
-	for (int i = 0; i < main_files.size(); i++) {
-		if (main_files[i].size() > 0) {
-			active_run_indices.emplace_back(i);
-			num_steps = min(num_steps, (int)main_files[i].size());
-		}
-	}
-
-	// for performance
-	for (int i: active_run_indices) {
-		std::reverse(main_files[i].begin(), main_files[i].end());
-	}
-
-	for (int _ = 0; _ < num_steps; _++) {
-		vector<vector<T>> runs_to_merge;
-		vector<pair<int, int>> new_active_run_indices;
-		for (int i: active_run_indices) {
-			runs_to_merge.emplace_back(main_files[i].back());
-			main_files[i].pop_back();
-		}
-		if (runs_to_merge.size() > 1) {
-			vector<T> new_merged_run = merge_single_runs(runs_to_merge, mem_size);
-			writes += new_merged_run.size();
-			anchor.emplace_back(new_merged_run);
-		} else {
-			writes += runs_to_merge[0].size();
-			anchor.emplace_back(runs_to_merge[0]);
-		}
-	}
-
-	// undo
-	for (int i: active_run_indices) {
-		std::reverse(main_files[i].begin(), main_files[i].end());
-	}
-	return writes;
-}
-
-template<typename T>
 pair<vector<T>, double> _polyphasic_sort_from_initial(
 	vector<vector<vector<T>>>& main_files,
-	vector<vector<T>>& anchor_file,
 	const int mem_size,
 	const bool verbose
 ){
+	constexpr int INF = std::numeric_limits<int>::max();
+
 	Observer watcher(std::cout);
 	watcher.step = 1;
-	const int num_files = main_files.size() + 1;
+	const int num_files = main_files.size();
 	int anchor_idx = num_files;
-	vector<int> main_idxs(num_files - 1);
-	std::iota(main_idxs.begin(), main_idxs.end(), 1);
 
 	int n = 0;
 	for (const auto& file: main_files) {
@@ -157,64 +45,41 @@ pair<vector<T>, double> _polyphasic_sort_from_initial(
 	// swap T[1] and T[n] (it is just a reference swap, inexpensive)
 	// distribute floor(1/(n-1)) of the runs in T[1] to T[i] for all i=2...n-1
 	while (remaining_runs() > 1) {
-		writes += polyphasic_merge(
-			main_files,
-			anchor_file,
-			mem_size
-		);
-
-		// find first empty file
-		int idx;
+		// find minimum of runs on non-empty, and first empty file
+		int num_steps = INF, idx = -1;
+		vector<int> merge_ids;
 		for (int i = 0; i < main_files.size(); i++) {
-			if (main_files[i].empty()) {
-				std::swap(main_files[i], anchor_file);
-				std::swap(main_idxs[i], anchor_idx);
+			if (!main_files[i].empty()) {
+				num_steps = min(num_steps, (int)main_files[i].size());
+				merge_ids.emplace_back(i);
+			} else if (idx == -1) {
 				idx = i;
-				break;
 			}
 		}
 
-		// only main_files[idx] is occupied and with > 1 runs
-		// Solution: distribute runs from main_files[idx]
-		// num_files is >= 3 so run_amount is == 0 when there is only a single run in main_files[0]
-		// (process finished)
-		if (remaining_runs() == main_files[idx].size() && main_files[idx].size() > 1) {
-			// so that pop_back() becomes pop_front()
-			reverse(main_files[idx].begin(), main_files[idx].end());
-			const int run_amount = main_files[idx].size() / (num_files);
-			const int remainder = main_files[idx].size() % (num_files);
-			for (int i = 0; i < main_files.size(); i++) {
-				if (i == idx) continue;
-				const int extra_run = (i < remainder) ? 1 : 0;
-				for (int j = 0; j < run_amount + extra_run; j++) {
-					writes += main_files[idx].back().size();
-					main_files[i].emplace_back(main_files[idx].back());
-					main_files[idx].pop_back();
-				}
-			}
-			// unreverse
-			reverse(main_files[0].begin(), main_files[0].end());
-			// register
-			if (verbose) {
-				watcher.register_step(main_files, main_idxs, mem_size);
-			}
+		// merge
+		for (int i = 0; i < num_steps; i++) {
+			writes += merge_single_run(main_files, merge_ids, idx, mem_size);
 		}
+
+		// HACK: so it considers empty anchor file when redistributing
+		// does not need to count those writes as they don't really exist
+		writes += redistribute_if_needed(main_files);
+
 		// register
 		if (verbose) {
-			watcher.register_step(main_files, main_idxs, mem_size);
+			watcher.register_step(main_files, mem_size);
 		}
 	}
-	return {main_files[0][0], double(writes) / double(n)};
-}
-
-int calculateTotalSize(const std::vector<std::vector<std::vector<int>>>& v) {
-    int total_size = 0;
-    for (const auto& outer : v) {
-        for (const auto& inner : outer) {
-            total_size += inner.size();
-        }
-    }
-    return total_size;
+	// find non-empty file, guaranteed to be the single run of the dataset
+	int final_file = -1;
+	for (int i = 0; i < main_files.size(); i++) {
+		if (!main_files[i].empty()) {
+			final_file = i;
+			break;
+		}
+	}
+	return {main_files[final_file][0], double(writes) / double(n)};
 }
 
 template<typename T>
@@ -226,18 +91,17 @@ vector<T> polyphasic_sort(
 ){
 	// TODO: allow other output streams?
 	Observer watcher(std::cout);
-	vector<vector<vector<T>>> main_files(num_files - 1);
-	vector<int> main_idxs(num_files - 1);
-	std::iota(main_idxs.begin(), main_idxs.end(), 1);
-	vector<vector<T>> anchor_file;
+	vector<vector<vector<T>>> files(num_files - 1);
 
-	perform_initial_distribution(data, main_files, mem_size);
+	perform_initial_distribution(data, files, mem_size);
 	if (verbose) {
-		watcher.register_step(main_files, main_idxs, mem_size);
+		watcher.register_step(files, mem_size);
 	}
+	// add file for merging
+	files.emplace_back();
 
 	auto[sorted_data, avg_writes] = _polyphasic_sort_from_initial(
-		main_files, anchor_file, mem_size, verbose
+		files, mem_size, verbose
 	);
 
 	if (verbose){

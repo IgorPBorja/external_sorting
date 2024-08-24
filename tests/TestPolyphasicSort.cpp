@@ -81,7 +81,7 @@ TEST(test_polyphasic_sort, parametrized_small_random_test_sort) {
         const int mem_size = RandomDataFixture::randint(num_files + 1, 2 * num_files + 1);
         const int size = RandomDataFixture::randint(1, 10);
         const vector<int> data = RandomDataFixture::random_vector(size, -1e5, +1e5);
-        const vector<int> balanced_sorted_data = polyphasic_sort(data, num_files, mem_size);
+        const vector<int> balanced_sorted_data = polyphasic_sort(data, num_files, mem_size, false);
         vector<int> expected_sorted_data = data;
         sort(expected_sorted_data.begin(), expected_sorted_data.end());
 

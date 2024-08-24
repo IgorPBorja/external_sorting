@@ -104,24 +104,6 @@ bool is_finished(const vector<vector<T>> &files) {
     return num_runs == 1;
 }
 
-// if there is a single file with many runs, returns its index, else 0
-template<typename T>
-int stuck_file(const vector<vector<T>> &files) {
-    int idx = -1;
-    for (size_t i = 0; i < files.size(); ++i) {
-        if (files[i].size() == 1) {
-            return -1;
-        } else if (files[i].size() > 1) {
-            if (idx != -1) {
-                // multiple files
-                return -1;
-            }
-            idx = i;
-        }
-    }
-    return idx;
-}
-
 // returns (sorted_vec, avg writes)
 template<typename T>
 pair<vector<T>, double> _cascade_sort_from_initial(
@@ -141,28 +123,9 @@ pair<vector<T>, double> _cascade_sort_from_initial(
 
     while (!is_finished(files)) {
         writes += merge_step(files, mem_size);
+        writes += redistribute_if_needed(files);
         if (verbose) {
             watcher.register_step(files, mem_size);
-        }
-        int stuck_file_idx = stuck_file(files);
-        if (stuck_file_idx >= 0) {
-            // redistribute more or less evenly between the other num_files-1 files
-            vector<vector<T>>& stuck_f = files[stuck_file_idx];
-            std::reverse(stuck_f.begin(), stuck_f.end());
-            const int base = stuck_f.size() / (num_files - 1), remainder = stuck_f.size() % (num_files - 1);
-            int j = 0;
-            for (int f_idx = 0; f_idx < files.size(); f_idx++) {
-                if (f_idx == stuck_file_idx) {
-                    continue;
-                }
-                for (int cnt = 0; cnt < base + (j < remainder); cnt++) {
-                    files[f_idx].emplace_back(stuck_f.back());
-                    stuck_f.pop_back();
-                }
-                ++j;
-            }
-            // all data was moved
-            writes += n;
         }
     }
     // find last run
@@ -184,7 +147,9 @@ vector<T> cascade_sort(
     perform_initial_distribution(data, files, mem_size);
     // add extra file for merging
     files.emplace_back();
-    watcher.register_step(files, mem_size);
+    if (verbose) {
+        watcher.register_step(files, mem_size);
+    }
 
     auto[sorted_data, avg_writes] = _cascade_sort_from_initial(
         files, mem_size, verbose
