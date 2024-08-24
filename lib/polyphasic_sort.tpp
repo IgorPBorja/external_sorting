@@ -37,26 +37,27 @@ vector<T> merge_single_runs(
 		i = (i + 1) % runs.size();
 	}
 
-	while (true) {
-		// verify if all runs were fully consumed
-		bool all_runs_consumed = true;
-		for (int i = 0; i < runs.size(); i++) {
-			all_runs_consumed &= (ptrs[i] >= runs[i].size());
-		}
-		if (all_runs_consumed) {
-			break;
-		}
-
+	// strategy: take from runs not totally consumed (in order)
+	while (!min_heap.empty()) {
 		// remove one element
 		auto[value, idx] = min_heap.top();
 		min_heap.pop();
 		// add to merge
 		result.emplace_back(value);
 
-		// refill heap
-		if (ptrs[idx] < runs[idx].size()) {
-			min_heap.emplace(runs[idx][ptrs[idx]], idx);
-			++ptrs[idx];
+		// refill heap: seek for incomplete file (not fully processed)
+		int next_run_idx = -1;
+		for (int i = 0; i < runs.size(); i++) {
+			if (ptrs[i] < runs[i].size()) {
+				next_run_idx = i;
+				break;
+			}
+		}
+		if (next_run_idx != -1) {
+			min_heap.emplace(runs[next_run_idx][ptrs[next_run_idx]], idx);
+			++ptrs[next_run_idx];
+		} else {
+			break;
 		}
 	}
 
