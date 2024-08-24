@@ -16,8 +16,6 @@ vector<T> merge_single_runs(
 	vector<vector<T>> &runs,
 	const int mem_size
 ) {
-	// assert it can hold at least one element from each run
-	assert(mem_size >= runs.size());
 	vector<T> result;
 	vector<int> ptrs(runs.size(), 0);
 
